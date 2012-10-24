@@ -1,0 +1,13 @@
+{
+	"cmd": ["tsc", "$file_name"],
+	"file_regex": "(.*\\.ts?)\\s\\(([0-9]+)\\,([0-9]+)\\)\\:\\s(...*?)$",
+	"selector": "source.ts",
+	"working_dir": "$file_path", 
+	"windows": {
+        "cmd": ["tsc.cmd", "$file_name"]
+    },
+	"osx": {
+       "path": "/usr/bin/:/usr/local/bin:/opt/local/bin"
+    }
+	
+}
