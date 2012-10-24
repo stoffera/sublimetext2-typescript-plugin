@@ -76,7 +76,7 @@ class TypeScriptServices:
 		self.comm.addSendCmd(obj)
 	
 	def getCompletions(self, name, pos, member, callback):
-		obj = {"cmd":"{\"command\":\"getCompletions\",\"name\";"+json.dumps(name)+",\"position\":"+json.dumps(pos)+",\"isMember\":"+json.dumps(member)+"}" ,"callback":callback}
+		obj = {"cmd":"{\"command\":\"getCompletions\",\"fileName\":"+json.dumps(name)+",\"position\":"+json.dumps(pos)+",\"isMember\":"+json.dumps(member)+"}" ,"callback":callback}
 		self.comm.addSendCmd(obj)
 
 	def getType(self, name, pos, callback):
@@ -90,7 +90,7 @@ class TypeScriptServices:
 
 class Communicator(threading.Thread):
 	sockFile = "/tmp/ahkatsls"
-	sockIP = "10.0.46.40"
+	sockIP = ("127.0.0.1",1337)
 	conn = None
 	sendCmds = Queue.Queue()
 	mutex = None
@@ -102,7 +102,7 @@ class Communicator(threading.Thread):
 		self.start()
 
 	def connect(self):
-		self.conn.connect((self.sockIP, 1337))
+		self.conn.connect(self.sockIP)
 
 	def run(self):
 		print("Server client thread started")
