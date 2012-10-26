@@ -80,6 +80,7 @@ module SublimeTS {
 			for (var i in this.scripts) {
 				if(this.scripts[i].name == range.name) {
 					this.scripts[i].editContent(range.start, range.end, range.content);
+					console.log(this.scripts[i].content)
 					return true;
 				}
 			}
@@ -123,10 +124,10 @@ module SublimeTS {
 
 		public initWithData(obj: any) {
 			if(super.initWithData(obj)
-				&& obj.fileName != undefined && typeof(obj.fileName) == 'string'
+				&& obj.name != undefined && typeof(obj.name) == 'string'
 				&& obj.position != undefined && typeof(obj.position) == 'number'
-				&& obj.isMember != undefined && typeof(obj.isMember) == 'bool') {
-				this.fileName = obj.fileName;
+				&& obj.isMember != undefined && typeof(obj.isMember) == 'boolean') {
+				this.fileName = obj.name;
 				this.position = obj.position;
 				this.isMember = obj.isMember;
 				return this;
@@ -196,7 +197,7 @@ module SublimeTS {
 					});
 				});
 
-			this.server.listen(1337, function() {
+			this.server.listen(socketPath, function() {
 				console.log("Server started");
 				});
 		}
@@ -242,6 +243,7 @@ module SublimeTS {
 				switch (obj.command) {
 					case 'addScript':
 					var addObj = new AddScriptCommandObject().initWithData(obj);
+					console.log(addObj)
 					if (addObj) {
 						this.lsh.addScript(addObj.name, addObj.content)
 						this.writeOkResponse(sock);
@@ -253,9 +255,8 @@ module SublimeTS {
 
 					case 'updateRange':
 					var rangeObj = new UpdateRangeCommandObject().initWithData(obj);
-					console.log(obj);
+					console.log(rangeObj);
 					if (rangeObj) {
-						console.log(rangeObj);
 						if (this.lsh.updateRange(rangeObj)) {
 							this.writeOkResponse(sock);
 						}
@@ -266,9 +267,11 @@ module SublimeTS {
 					else {
 						this.writeErrorResponse(sock, 'Error: Malformed command (updateRange)');
 					}
+					break; 
 
 					case 'getCompletionsAtPosition':
 					var compObj = new GetCompletionsCommandObject().initWithData(obj)
+					console.log(compObj)
 					if (compObj) {
 						var completions = this.ls.getCompletionsAtPosition(compObj.fileName, compObj.position, compObj.isMember);
 						this.writeResponse(sock, completions);
@@ -276,6 +279,7 @@ module SublimeTS {
 					else {
 						this.writeErrorResponse(sock, 'Malformed command object (getCompletionsAtPosition)');
 					}
+					break;
 
 					default:
 					this.writeResponse(sock, 'Error: Unknown command')
@@ -307,4 +311,4 @@ module SublimeTS {
 }
 	
 
-var myServer = new SublimeTS.Server('/tmp/sublimeTS-sfdss');
+var myServer = new SublimeTS.Server('/tmp/ahkatsls');
