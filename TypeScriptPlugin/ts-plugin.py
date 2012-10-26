@@ -72,19 +72,46 @@ class TypeScriptServices:
 		#self.addScript("/typescript/src/lanser.t","hej me dig", None)
 
 	def addScript(self, name, content, callback):
-		obj = {"cmd":"{\"command\":\"addScript\",\"name\":\""+name+"\",\"content\":"+json.dumps(content)+"}","callback":callback}
+		obj = dict()
+		command = 'addScript'
+		obj['cmd'] = '{{"command":"{command}","name":"{name}","content":{content}}}'.format(
+			name=name,
+			content=json.dumps(content),
+			command=command)
+		obj['callback'] = callback
 		self.comm.addSendCmd(obj)
 	
 	def getCompletions(self, name, pos, member, callback):
-		obj = {"cmd":"{\"command\":\"getCompletions\",\"name\";"+json.dumps(name)+",\"position\":"+json.dumps(pos)+",\"isMember\":"+json.dumps(member)+"}" ,"callback":callback}
+		obj = dict()
+		command = "getCompletionsAtPosition"
+		obj['cmd'] = '{{"command":"{command}","name":"{name}","position":{pos},"isMember":{member}}}'.format(
+			name=name,
+			command=command,
+			pos=json.dumps(pos),
+			member=json.dumps(member))
+		obj['callback'] = callback
 		self.comm.addSendCmd(obj)
 
 	def getType(self, name, pos, callback):
-		obj = {"cmd":"{\"command\":\"getType\",\"name\":"+json.dumps(name)+",\"position\":"+json.dumps(pos)+"}", "callback":callback}
+		obj = dict()
+		command = "getType"
+		obj['cmd'] = '{{"command":"{command}","name":"{name}","position":{pos},"isMember":{member}}}'.format(
+			name=name,
+			command=command,
+			pos=json.dumps(pos))
+		obj['callback'] = callback
 		self.comm.addSendCmd(obj)
 
 	def updateRange(self, name, startPos, endPos, content, callback):
-		obj = {"cmd":"{\"command\":\"updateRange\",\"name\":"+json.dumps(name)+",\"start\":"+json.dumps(startPos)+",\"end\":"+json.dumps(endPos)+",\"content\":"+json.dumps(content)+"}","callback":callback}
+		obj = dict()
+		command = "updateRange"
+		obj['cmd'] = '{{"command":"{command}","name":"{name}","start":{start},"end":{end},"content":{content}}}'.format(
+			name=name,
+			command=command,
+			start=json.dumps(startPos),
+			end=json.dumps(endPos),
+			content=json.dumps(content))
+		obj['callback'] = callback
 		self.comm.addSendCmd(obj)
 	
 
