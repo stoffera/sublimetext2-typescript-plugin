@@ -15,9 +15,9 @@ class TsEventsCommand(sublime_plugin.EventListener):
 		def cb(comps):
 			print("Got completions: "+comps)
 			cmpl = json.loads(comps)
-			
-
-		tsServices.getCompletions(name, pos, True, cb)
+	
+	# FIXME: completios never gets returned here
+		tsServices.getCompletions(name, pos, False, cb)
 		#freeze
 		#self.mutex.acquire()
 
@@ -151,10 +151,14 @@ class Communicator(threading.Thread):
 			# 	return
 			int_value = struct.unpack('<i',respSize)[0]
 			print("Receive size: "+str(int_value))
-			resp = self.conn.recv(int_value);
-			print("Got response: "+resp)
 
-			if cmd["callback"] != None:
+	# FIXME: This receives up to int_value bytes. It may not receive the whole package.
+	# On lage packages it fails
+			resp = self.conn.recv(int_value);
+
+			print("Got response: " + resp)
+
+			if 'callback' in cmd and cmd["callback"] != None:
 				cmd["callback"](resp)
 
 
