@@ -130,7 +130,7 @@ class TypeScriptServices:
 
 class Communicator(threading.Thread):
 	sockFile = "/tmp/ahkatsls"
-	sockIP = "10.0.46.40"
+	sockIP = ("127.0.0.1",1337)
 	conn = None
 	sendCmds = Queue.Queue()
 	mutex = None
