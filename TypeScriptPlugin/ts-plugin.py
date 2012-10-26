@@ -1,9 +1,9 @@
 import sublime, sublime_plugin, socket, threading, Queue, struct, json
 
 class TsEventsCommand(sublime_plugin.EventListener):
-	lastSelection = ""
+	lastPosition = 0
 	mutex = threading.Semaphore(0)
-	currentEditLineRegion = None;
+	
 	def on_query_completions(self, view, prefix, locations):
 		name = view.file_name()
 		if name == None:
@@ -41,26 +41,39 @@ class TsEventsCommand(sublime_plugin.EventListener):
 		name = view.file_name()
 		if name == None:
 			return
+                
+		selection = view.sel()
+		if len(selection) > 1:
+			raise Exception("Not supported")
 
-		r = view.sel()[0]
-		r = view.line(r)
-		if self.currentEditLineRegion != None and self.currentEditLineRegion.a == r.a and self.currentEditLineRegion.b == r.b:
+		selection = selection[0]
+
+		if selection.a != selection.b:
+			raise Exception("Not supported")
+
+		position = selection.a
+                
+	# TODO: Add support for delete, paste, etc
+		command,options,redo = view.command_history(0, True)
+		if command != 'insert':
 			return
+		
+		
+		insertedText = view.substr(sublime.Region(self.lastPosition, position))
 
-		text = view.substr(r)
-		tsServices.updateRange(name, r.a, r.b, text, None)
-		self.currentEditLineRegion = r
+	# TODO: Detect member completion
+		tsServices.updateRange(name, self.lastPosition, self.lastPosition, insertedText, None)
+		self.lastPosition = position
 
 
 
-	def on_selection_modified(self, view): 
-		txt = ""
-		for region in view.sel(): 
-			if not region.empty(): txt = txt + view.substr(region)
-			if txt != self.lastSelection:
-				self.lastSelection = txt;
-				#print("sel. changed: "+txt) 
-
+	def on_selection_modified(self, view):
+		sel = view.sel()[0]
+                # TODO: Handle nonempty and multiple selections
+		if sel.a != sel.b:
+			raise Exception("Not supported")
+		self.lastPosition = sel.a
+		print("Position: " + str(self.lastPosition))
 
 
 class TypeScriptServices:
