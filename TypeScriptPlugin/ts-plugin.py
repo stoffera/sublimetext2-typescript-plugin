@@ -124,12 +124,14 @@ class Communicator(threading.Thread):
 
 	def __init__(self):
 		threading.Thread.__init__(self);
-		self.conn = socket.socket(socket.AF_INET, socket.SOCK_STREAM);
+		#self.conn = socket.socket(socket.AF_INET, socket.SOCK_STREAM);
+		self.conn = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM);
 		self.mutex = threading.Semaphore()
 		self.start()
 
 	def connect(self):
-		self.conn.connect((self.sockIP, 1337))
+		#self.conn.connect((self.sockIP, 1337))
+		self.conn.connect((self.sockFile))
 
 	def run(self):
 		print("Server client thread started")
