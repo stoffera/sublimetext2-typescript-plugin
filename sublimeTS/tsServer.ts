@@ -243,7 +243,7 @@ module SublimeTS {
 				switch (obj.command) {
 					case 'addScript':
 					var addObj = new AddScriptCommandObject().initWithData(obj);
-					console.log(addObj)
+					//console.log(addObj)
 					if (addObj) {
 						this.lsh.addScript(addObj.name, addObj.content)
 						this.writeOkResponse(sock);
@@ -255,7 +255,7 @@ module SublimeTS {
 
 					case 'updateRange':
 					var rangeObj = new UpdateRangeCommandObject().initWithData(obj);
-					console.log(rangeObj);
+					//console.log(rangeObj);
 					if (rangeObj) {
 						if (this.lsh.updateRange(rangeObj)) {
 							this.writeOkResponse(sock);
@@ -271,7 +271,7 @@ module SublimeTS {
 
 					case 'getCompletionsAtPosition':
 					var compObj = new GetCompletionsCommandObject().initWithData(obj)
-					console.log(compObj)
+					//console.log(compObj)
 					if (compObj) {
 						var completions = this.ls.getCompletionsAtPosition(compObj.fileName, compObj.position, compObj.isMember);
 						this.writeResponse(sock, completions);

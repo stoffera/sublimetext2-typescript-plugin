@@ -13,11 +13,14 @@ class TsEventsCommand(sublime_plugin.EventListener):
 		completions = []
 
 		def cb(comps):
-			print("Got completions: "+comps)
+			#print("Got completions: "+comps)
 			cmpl = json.loads(comps)
+			completions = [(x['name'],x['name']) for x in cmpl['entries']]
+			print(completions)
+			#self.mutex.release()
 	
 	# FIXME: completios never gets returned here
-		tsServices.getCompletions(name, pos, False, cb)
+		tsServices.getCompletions(name, pos, True, cb)
 		#freeze
 		#self.mutex.acquire()
 
@@ -55,14 +58,22 @@ class TsEventsCommand(sublime_plugin.EventListener):
                 
 	# TODO: Add support for delete, paste, etc
 		command,options,redo = view.command_history(0, True)
-		if command != 'insert':
+		print(command)
+
+		insertedText = None
+		if command == 'insert':
+			insertedText = view.substr(sublime.Region(self.lastPosition, position))
+			tsServices.updateRange(name, self.lastPosition, self.lastPosition, insertedText, None)
+		elif command == 'left_delete':
+			insertedText = ''
+			tsServices.updateRange(name, position, self.lastPosition, insertedText, None)
+		else:
 			return
 		
 		
-		insertedText = view.substr(sublime.Region(self.lastPosition, position))
 
 	# TODO: Detect member completion
-		tsServices.updateRange(name, self.lastPosition, self.lastPosition, insertedText, None)
+		
 		self.lastPosition = position
 
 
@@ -167,9 +178,20 @@ class Communicator(threading.Thread):
 
 	# FIXME: This receives up to int_value bytes. It may not receive the whole package.
 	# On lage packages it fails
-			resp = self.conn.recv(int_value);
 
-			print("Got response: " + resp)
+			got = 0
+			resp = ''
+			while got < int_value:
+				buf = self.conn.recv(int_value - got)
+				got = got + len(buf)
+				resp = resp + buf
+
+
+			if len(resp) > 0:
+				pass
+				#print("Got response: " + resp)
+			else:
+				print("Got empty response")
 
 			if 'callback' in cmd and cmd["callback"] != None:
 				cmd["callback"](resp)
