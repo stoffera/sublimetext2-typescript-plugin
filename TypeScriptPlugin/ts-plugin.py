@@ -2,9 +2,11 @@ import sublime, sublime_plugin, socket, threading, Queue, struct, json
 
 class TsEventsCommand(sublime_plugin.EventListener):
 	lastPosition = 0
-	mutex = threading.Semaphore(0)
+	signal = threading.Condition()
+	completions = []
 	
 	def on_query_completions(self, view, prefix, locations):
+		self.signal.acquire()
 		name = view.file_name()
 		if name == None:
 			return []
@@ -12,19 +14,25 @@ class TsEventsCommand(sublime_plugin.EventListener):
 		pos = locations[0]
 		completions = []
 
-		def cb(comps):
-			#print("Got completions: "+comps)
-			cmpl = json.loads(comps)
-			completions = [(x['name'],x['name']) for x in cmpl['entries']]
-			print(completions)
-			#self.mutex.release()
-	
-	# FIXME: completios never gets returned here
-		tsServices.getCompletions(name, pos, True, cb)
-		#freeze
-		#self.mutex.acquire()
+		isMember = view.substr(sublime.Region(pos-1, pos)) == "."
 
-		return completions
+		def cb(comps):
+			self.signal.acquire()
+			cmpl = json.loads(comps)
+			self.completions = [(x['name'],x['name']) for x in cmpl['entries']]
+			print("Got completins")
+			self.signal.notifyAll()
+			self.signal.release()
+	
+
+		tsServices.getCompletions(name, pos, isMember, cb)
+		
+		self.signal.wait(1.0)
+
+		self.signal.release()
+		c = self.completions
+		self.completions = []
+		return c
 
 	def on_new(self, view):
 		name = view.file_name()
@@ -67,7 +75,12 @@ class TsEventsCommand(sublime_plugin.EventListener):
 		elif command == 'left_delete':
 			insertedText = ''
 			tsServices.updateRange(name, position, self.lastPosition, insertedText, None)
+		elif command == 'commit_completions':
+			# Inserted text is text between last known pos and current pos
+			insertedText = view.substr(sublime.Region(self.lastPosition, position))
+			tsServices.updateRange(name, self.lastPosition, self.lastPosition, insertedText, None)
 		else:
+			print(command)
 			return
 		
 		
@@ -93,7 +106,6 @@ class TypeScriptServices:
 		print("init ts services")
 		self.comm = Communicator()
 		self.comm.connect()
-		#self.addScript("/typescript/src/lanser.t","hej me dig", None)
 
 	def addScript(self, name, content, callback):
 		obj = dict()
@@ -148,13 +160,11 @@ class Communicator(threading.Thread):
 
 	def __init__(self):
 		threading.Thread.__init__(self);
-		#self.conn = socket.socket(socket.AF_INET, socket.SOCK_STREAM);
 		self.conn = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM);
 		self.mutex = threading.Semaphore()
 		self.start()
 
 	def connect(self):
-		#self.conn.connect((self.sockIP, 1337))
 		self.conn.connect((self.sockFile))
 
 	def run(self):
@@ -176,22 +186,12 @@ class Communicator(threading.Thread):
 			int_value = struct.unpack('<i',respSize)[0]
 			print("Receive size: "+str(int_value))
 
-	# FIXME: This receives up to int_value bytes. It may not receive the whole package.
-	# On lage packages it fails
-
 			got = 0
 			resp = ''
 			while got < int_value:
 				buf = self.conn.recv(int_value - got)
 				got = got + len(buf)
 				resp = resp + buf
-
-
-			if len(resp) > 0:
-				pass
-				#print("Got response: " + resp)
-			else:
-				print("Got empty response")
 
 			if 'callback' in cmd and cmd["callback"] != None:
 				cmd["callback"](resp)
@@ -203,5 +203,4 @@ class Communicator(threading.Thread):
 	def nextSendCmd(self):
 		return self.sendCmds.get(True)
 		
-
 tsServices = TypeScriptServices()
